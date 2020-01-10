@@ -27,40 +27,45 @@ class MG:
         self.alpha = 0.1
         self.first = True
         self.beta=0.1
+        self.mean=0.0
+        self.diff = np.zeros((height, width), np.double)
+
 
     def calculate(self, frame):
 
         if self.first:
             self.prevFrame = self.mus = frame
+            for i in range(self.height):
+                for j in range(0, self.width):
+                    self.sigmas[i][j]=127
             self.first = False
             return
+        self.diff=cv2.absdiff(frame,self.mus)
+        self.diff/=(self.sigmas)**0.5
+        sigmas=self.alpha*abs(self.mus - frame)**2+(1-self.alpha)*self.sigmas
+        mus=self.alpha*frame+(1-self.alpha)*self.mus
+        
         for i in range(self.height):
-            for j in range(0, self.width):
-                self.sigmas[i][j] = self.beta * (self.prevFrame[i][j]
-                        - self.mus[i][j]) ** 2 + (1 - self.beta) \
-                    * self.sigmas[i][j]
+                for j in range(0, self.width):
+                    if(self.diff[i][j]<6.25):
+                        self.mus[i][j]=mus[i][j]
+                        self.sigmas[i][j]=sigmas[i][j]
 
-        for i in range(0, self.height):
-            for j in range(0, self.width):
-
-                self.mus[i][j] = self.alpha * self.prevFrame[i][j] + (1
-                        - self.alpha) * self.mus[i][j]
         self.prevFrame = frame
 
     def substract(self, frame):
-
         diff = np.zeros((self.height, self.width), np.double)
         for i in range(self.height):
-            for j in range(self.width):
-                T = 6.25* self.sigmas[i][j]**0.5
-                if abs(self.mus[i][j] - frame[i][j]) > T:
-                    diff[i][j] = 255
+                for j in range(0, self.width):
+                    if(self.diff[i][j]>6.25):
+                        diff[i][j]=255
         return diff
+        
 
 
 (h, w) = np.shape(cv2.imread(path + '1.png', 0))
 subtractor = MG(height=h, width=w)
-
+framecnt=0
 for i in range(1, 1000 - 2):
     print ('frame ' + str(i))
     image0 = cv2.imread(path + str(i) + '.png')
@@ -71,8 +76,7 @@ for i in range(1, 1000 - 2):
 
     image0 = image0.astype(float)
     subtractor.beta=subtractor.alpha=1/i
-    if(i<80 or i%5==0):
-    		subtractor.calculate(image0)
+    subtractor.calculate(image0)
 
 
         # image1 = cv2.resize(image1, (w,h),interpolation=cv2.INTER_AREA)
