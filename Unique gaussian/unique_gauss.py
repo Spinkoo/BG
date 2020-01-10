@@ -5,11 +5,10 @@ import cv2
 import numpy as np
 import sys
 
-if(len(sys.argv)<3):
-    print("You have to specify the path as argument and  the dataset for train size")
+if(len(sys.argv)<2):
+    print("You have to specify the path as argument ")
     exit()
 path = sys.argv[1]
-size= int(sys.argv[2])
 
 class MG:
 
@@ -76,10 +75,8 @@ for i in range(1, 1000 - 2):
     # image0 = cv2.resize(image0, (100, 100),                       interpolation=cv2.INTER_AREA)
 
     image0 = image0.astype(float)
-    if(i<size or i % 5 ==0 ):
-            framecnt+=1
-            subtractor.beta=subtractor.alpha=1/framecnt
-            subtractor.calculate(image0)
+    subtractor.beta=subtractor.alpha=1/i
+    subtractor.calculate(image0)
 
 
         # image1 = cv2.resize(image1, (w,h),interpolation=cv2.INTER_AREA)
